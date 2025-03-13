@@ -1,0 +1,25 @@
+# Ficheiros do Django
+*.log
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+env/
+venv/
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Ficheiros do IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ficheiros estáticos coletados
+staticfiles/
+
+# Ficheiros de migração (opcional, dependendo do teu fluxo de trabalho)
+migrations/

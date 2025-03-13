@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>Detalhes do Pedido #{{ pedido.id }}</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Informações do Produto</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong>Nome:</strong> {{ pedido.produto.nome }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Quantidade:</strong> {{ pedido.quantidade }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Valor Total:</strong> R$ {{ pedido.valor_total }}
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Status do Pedido</h5>
+                    <div class="alert alert-{% if pedido.status == 'entregue' %}success{% else %}warning{% endif %}">
+                        {{ pedido.get_status_display }}
+                    </div>
+                    <a href="{% url 'listar_pedidos' %}" class="btn btn-secondary">
+                        Voltar para Meus Pedidos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

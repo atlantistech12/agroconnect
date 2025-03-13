@@ -1,0 +1,44 @@
+{% extends "base.html" %}  <!-- Opcional: herda de um template base -->
+
+{% block content %}
+<h2>Registrar</h2>
+<form method="post">
+    {% csrf_token %}
+    <div>
+        {{ form.username.label_tag }}
+        {{ form.username }}
+    </div>
+    
+    <div>
+        {{ form.email.label_tag }}
+        {{ form.email }}
+    </div>
+    
+    <div>
+        {{ form.tipo.label_tag }}
+        {{ form.tipo }}
+    </div>
+    
+    <div>
+        {{ form.telefone.label_tag }}
+        {{ form.telefone }}
+    </div>
+    
+    <div>
+        {{ form.endereco.label_tag }}
+        {{ form.endereco }}
+    </div>
+    
+    <div>
+        {{ form.password1.label_tag }}
+        {{ form.password1 }}
+    </div>
+    
+    <div>
+        {{ form.password2.label_tag }}
+        {{ form.password2 }}
+    </div>
+    
+    <button type="submit">Registrar</button>
+</form>
+{% endblock %}

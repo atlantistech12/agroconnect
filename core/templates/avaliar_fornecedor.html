@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header">
+            <h4>Avaliar Pedido #{{ pedido.id }}</h4>
+            <small>Produto: {{ pedido.produto.nome }}</small>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label>Nota:</label>
+                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                        {% for value, text in form.nota.field.choices %}
+                        <label class="btn btn-outline-warning {% if form.nota.value == value %}active{% endif %}">
+                            <input type="radio" name="nota" value="{{ value }}" 
+                                   {% if form.nota.value == value %}checked{% endif %}>
+                            {{ text }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    {{ form.comentario.label_tag }}
+                    {{ form.comentario }}
+                </div>
+
+                <button type="submit" class="btn btn-primary">Enviar Avaliação</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

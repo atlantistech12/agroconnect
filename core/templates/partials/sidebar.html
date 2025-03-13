@@ -1,0 +1,30 @@
+<nav class="col-md-2 d-none d-md-block bg-light sidebar">
+    <div class="sidebar-sticky">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                   href="{% url 'dashboard' %}">
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'listar_pedidos' %}active{% endif %}" 
+                   href="{% url 'listar_pedidos' %}">
+                    Pedidos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'relatorios' %}active{% endif %}" 
+                   href="{% url 'relatorios' %}">
+                    Relatórios
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'configuracoes' %}active{% endif %}" 
+                   href="{% url 'configuracoes' %}">
+                    Configurações
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>

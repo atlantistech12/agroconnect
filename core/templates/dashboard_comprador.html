@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Bem-vindo, {{ request.user.username }} (Comprador)</h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <h4>Produtos Disponíveis</h4>
+            <div class="list-group">
+                {% for produto in produtos_disponiveis %}
+                <div class="list-group-item">
+                    <h5>{{ produto.nome }}</h5>
+                    <p>{{ produto.descricao }}</p>
+                    <p>Preço: R$ {{ produto.preco }}</p>
+                    <a href="{% url 'fazer_pedido' produto.id %}" class="btn btn-primary">
+                        Fazer Pedido
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <h4>Meus Pedidos</h4>
+            <div class="list-group">
+                {% for pedido in meus_pedidos %}
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>{{ pedido.produto.nome }}</h5>
+                            <p>Quantidade: {{ pedido.quantidade }}</p>
+                            <p>Valor Total: R$ {{ pedido.valor_total }}</p>
+                        </div>
+                        <div>
+                            <span class="badge 
+                                {% if pedido.status == 'aceito' %}bg-success
+                                {% elif pedido.status == 'recusado' %}bg-danger
+                                {% else %}bg-warning{% endif %}">
+                                {{ pedido.get_status_display }}
+                            </span>
+                            <p class="text-muted mt-2">
+                                {{ pedido.data_pedido|date:"d/m/Y H:i" }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {% if pedido.status == 'aceito' %}
+                    <div class="alert alert-success mt-2">
+                        <i class="fas fa-check-circle"></i>
+                        Seu pedido foi aceito! O fornecedor está preparando a entrega.
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

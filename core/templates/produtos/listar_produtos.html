@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="get" class="form-inline">
+                <input type="text" 
+                       name="search" 
+                       class="form-control mr-2" 
+                       placeholder="Pesquisar produtos..."
+                       value="{{ search_query }}">
+                
+                <select name="categoria" class="form-control mr-2">
+                    <option value="">Todas Categorias</option>
+                    {% for categoria in categorias %}
+                    <option value="{{ categoria.id }}" 
+                        {% if categoria.id == categoria_selecionada %}selected{% endif %}>
+                        {{ categoria.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Produtos -->
+    <div class="row">
+        {% for produto in produtos %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                {% if produto.imagem %}
+                <img src="{{ produto.imagem.url }}" 
+                     class="card-img-top" 
+                     alt="{{ produto.nome }}"
+                     style="height: 200px; object-fit: cover;">
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ produto.nome }}</h5>
+                    <p class="card-text">{{ produto.descricao|truncatechars:100 }}</p>
+                    
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Preço:</strong> R$ {{ produto.preco|floatformat:2 }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Disponível:</strong> {{ produto.quantidade }} unidades
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Fornecedor:</strong> 
+                            <a href="{% url 'perfil_fornecedor' produto.fornecedor.id %}">
+                                {{ produto.fornecedor.usuario.username }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <a href="{% url 'fazer_pedido' produto.id %}" 
+                       class="btn btn-success btn-block">
+                        <i class="fas fa-cart-plus"></i> Encomendar
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning">
+                Nenhum produto encontrado com os filtros selecionados
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
