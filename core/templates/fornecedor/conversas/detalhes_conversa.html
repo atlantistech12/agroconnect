@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'partials/sidebar_comprador.html' %}
+        
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h2 class="h4">Conversa com {{ outro_usuario.usuario.username }}</h2>
+                <a href="{% url 'mensagens' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar
+                </a>
+            </div>
+
+            <div class="chat-container mb-4">
+                {% for mensagem in mensagens %}
+                <div class="message {% if mensagem.remetente == request.user.perfil %}sent{% else %}received{% endif %}">
+                    <div class="message-content">
+                        <p>{{ mensagem.conteudo }}</p>
+                        <small class="text-muted">{{ mensagem.data_envio|date:"d/m/Y H:i" }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <form method="post" class="mt-4">
+                {% csrf_token %}
+                <div class="input-group">
+                    {{ form.conteudo }}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+</div>
+
+<style>
+.chat-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.message {
+    margin-bottom: 15px;
+    display: flex;
+}
+
+.message.sent {
+    justify-content: flex-end;
+}
+
+.message.received {
+    justify-content: flex-start;
+}
+
+.message-content {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    position: relative;
+}
+
+.message.sent .message-content {
+    background: #007bff;
+    color: white;
+}
+
+.message.received .message-content {
+    background: white;
+    border: 1px solid #dee2e6;
+}
+</style>
+{% endblock %}

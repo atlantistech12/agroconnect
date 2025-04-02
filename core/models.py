@@ -42,6 +42,11 @@ class Produto(models.Model):
     descricao = models.TextField()
     preco = models.DecimalField(max_digits=10, decimal_places=2)
     quantidade = models.IntegerField()
+    estoque_minimo = models.IntegerField(
+        default=10,
+        verbose_name="Estoque Mínimo",
+        help_text="Quantidade mínima para alertas de reposição"
+    )
     data_criacao = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -103,6 +108,19 @@ class Mensagem(models.Model):
 
     def __str__(self):
         return f"De {self.remetente} para {self.destinatario} - {self.data_envio}"
+    class Meta:
+        ordering = ['-data_envio']
+        
+    def mark_as_read(self):
+        if not self.lida:
+            self.lida = True
+            self.save()
+    
+    @classmethod
+    def get_conversations(cls, user):
+        return cls.objects.filter(
+            Q(remetente=user) | Q(destinatario=user)
+        ).distinct('remetente', 'destinatario')
     
 
 class Avaliacao(models.Model):

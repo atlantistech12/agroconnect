@@ -28,6 +28,13 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'criar_produto' %}active{% endif %}" 
+                   href="{% url 'criar_produto' %}">
+                    <i class="fas fa-box-open mr-2"></i>
+                    Criar Produtos
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'listar_pedidos' %}active{% endif %}" 
                    href="{% url 'listar_pedidos' %}">
                     <i class="fas fa-clipboard-list mr-2"></i>

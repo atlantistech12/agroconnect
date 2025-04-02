@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row ">
+        <!-- Sidebar Fixo -->
+            {% include 'partials/sidebar_comprador.html' %}
+
+        <!-- Conteúdo Principal -->
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-4" >
+            <!-- Filtros -->
+            <div class="row mb-4 g-3 align-items-center">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <input type="text" 
+                           name="search" 
+                           class="form-control form-control-sm" 
+                           placeholder="Pesquisar..."
+                           value="{{ search_query }}">
+                </div>
+                
+                <div class="col-12 col-md-4 col-lg-3">
+                    <select name="categoria" class="form-select form-select-sm">
+                        <option value="">Todas Categorias</option>
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" 
+                            {% if categoria.id == categoria_selecionada %}selected{% endif %}>
+                            {{ categoria.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid de Produtos -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+                {% for produto in produtos %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0">
+                        {% if produto.imagem %}
+                        <img src="{{ produto.imagem.url }}" 
+                             class="card-img-top" 
+                             alt="{{ produto.nome }}"
+                             style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title mb-2">{{ produto.nome }}</h5>
+                            <p class="card-text small text-muted flex-grow-1">{{ produto.descricao|truncatechars:100 }}</p>
+                            
+                            <div class="mt-auto">
+                                <ul class="list-group list-group-flush small">
+                                    <li class="list-group-item px-0 d-flex justify-content-between">
+                                        <span>Preço:</span>
+                                        <strong>ECV {{ produto.preco|floatformat:2 }}</strong>
+                                    </li>
+                                    <li class="list-group-item px-0 d-flex justify-content-between">
+                                        <span>Estoque:</span>
+                                        <span>{{ produto.quantidade }} unidades</span>
+                                    </li>
+                                    <li class="list-group-item px-0">
+                                        <small class="text-muted">Fornecedor:</small>
+                                        <a href="{% url 'perfil_fornecedor' produto.fornecedor.id %}" 
+                                           class="d-block text-truncate">
+                                            {{ produto.fornecedor.usuario.username }}
+                                        </a>
+                                    </li>
+                                </ul>
+                                
+                                <div class="mt-3">
+                                    <a href="{% url 'fazer_pedido' produto.id %}" 
+                                       class="btn btn-success btn-sm w-100">
+                                        <i class="fas fa-cart-plus me-2"></i>Encomendar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-warning py-2 mb-0 text-center">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Nenhum produto encontrado com os filtros selecionados
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</div>
+
+
+{% endblock %}

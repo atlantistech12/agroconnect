@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'partials/sidebar_fornecedor.html' %}
+        
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h2 class="h4">Mensagens</h2>
+                <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaMensagemModal">
+                    <i class="fas fa-plus me-2"></i>Nova Mensagem
+                </a>
+            </div>
+
+            <div class="list-group">
+                {% for thread in threads %}
+                <a href="{% url 'detalhes_conversa' thread.user.id %}" 
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <img src="{% static 'images/avatar.png' %}" 
+                             class="rounded-circle me-3" 
+                             width="40" 
+                             alt="Avatar">
+                        <div>
+                            <h6 class="mb-1">{{ thread.user.usuario.username }}</h6>
+                            <small class="text-muted">{{ thread.ultima_msg.conteudo|truncatechars:40 }}</small>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted">{{ thread.ultima_msg.data_envio|timesince }} atrás</small>
+                        {% if thread.nao_lidas > 0 %}
+                        <span class="badge bg-danger rounded-pill ms-2">{{ thread.nao_lidas }}</span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% empty %}
+                <div class="alert alert-info mt-3">
+                    Nenhuma mensagem encontrada
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Modal Nova Mensagem -->
+<div class="modal fade" id="novaMensagemModal" tabindex="-1" aria-labelledby="novaMensagemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="novaMensagemModalLabel">
+                    <i class="fas fa-paper-plane me-2"></i>Nova Mensagem
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'nova_mensagem' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Destinatário</label>
+                        <select name="destinatario" class="form-select" required>
+                            <option value="" selected disabled>Selecione um contato...</option>
+                            {% for usuario in todos_usuarios %}
+                            <option value="{{ usuario.id }}">{{ usuario.usuario.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sua Mensagem</label>
+                        <textarea name="conteudo" 
+                                  class="form-control" 
+                                  rows="4"
+                                  placeholder="Digite sua mensagem aqui..."
+                                  required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Enviar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!-- Botão Flutuante de Nova Mensagem -->
+<div class="position-fixed bottom-0 end-0 mb-5 me-3">
+    <button type="button" 
+            class="btn btn-primary btn-lg rounded-circle shadow-lg"
+            data-bs-toggle="modal" 
+            data-bs-target="#novaMensagemModal"
+            title="Nova Mensagem">
+        <i class="fas fa-comment-dots"></i>
+    </button>
+</div>
+
+<!-- Estilo Personalizado -->
+<style>
+    .btn-flutuante {
+        width: 60px;
+        height: 60px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-flutuante:hover {
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+    }
+    
+    .btn-flutuante i {
+        font-size: 1.5rem;
+    }
+    #novaMensagemModal .modal-content {
+    border-radius: 15px;
+    border: none;
+}
+
+#novaMensagemModal textarea {
+    resize: none;
+    min-height: 120px;
+}
+
+/* Efeito de hover nos contatos */
+.list-group-item-action:hover {
+    transform: translateX(5px);
+    transition: transform 0.3s ease;
+}
+</style>
+{% endblock %}

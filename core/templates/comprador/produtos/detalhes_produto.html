@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    {% include 'partials/sidebar_comprador.html' %}
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>{{ produto.nome }}</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    {% if produto.imagem %}
+                    <img src="{{ produto.imagem.url }}" 
+                         class="img-fluid" 
+                         alt="{{ produto.nome }}">
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <h5>Descrição</h5>
+                    <p>{{ produto.descricao }}</p>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong>Preço:</strong> ECV {{ produto.preco }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Estoque:</strong> {{ produto.quantidade }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Fornecedor:</strong> 
+                            <a href="{% url 'perfil_fornecedor' produto.fornecedor.id %}">
+                                {{ produto.fornecedor.usuario.username }}
+                            </a>
+                        </li>
+                    </ul>
+                    <a href="{% url 'fazer_pedido' produto.id %}" 
+                       class="btn btn-success btn-block mt-3">
+                        Fazer Pedido
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

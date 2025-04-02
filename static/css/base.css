@@ -1,0 +1,110 @@
+/* Sidebar Responsivo */
+.sidebar {
+    width: 280px;
+    transition: transform 0.3s ease;
+}
+
+.active-link {
+    background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+    color: white !important;
+    box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+}
+
+.offcanvas-body .nav-link {
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.offcanvas-body .nav-link:hover:not(.active-link) {
+    background: #f8f9fa;
+    color: #0d6efd;
+    transform: translateX(5px);
+}
+
+@media (min-width: 768px) {
+    .offcanvas {
+        transform: none !important;
+        visibility: visible !important;
+        position: relative;
+        background: transparent;
+        border: none;
+    }
+    
+    .offcanvas-header {
+        display: none;
+    }
+    
+    .navbar-brand {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767px) {
+    main {
+        margin-top: 56px;
+    }
+    
+    .sidebar {
+        width: 100% !important;
+    }
+}
+
+.offcanvas-start {
+    width: 280px !important;
+    visibility: visible !important;
+    transform: translateX(0) !important;
+}
+
+@media (min-width: 768px) {
+    .offcanvas {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        transform: none !important;
+    }
+    
+    .navbar-toggler {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .offcanvas {
+        position: fixed;
+        z-index: 1045;
+    }
+    
+    main {
+        margin-top: 56px; /* Altura da navbar mobile */
+    }
+}
+
+/* Estilização dos links */
+.active-link {
+    background: linear-gradient(45deg, #0d6efd, #0b5ed7) !important;
+    color: white !important;
+    border-radius: 8px;
+    margin: 2px 12px;
+}
+
+.nav-link {
+    transition: all 0.3s ease;
+}
+
+.offcanvas.offcanvas-start:not(.show) {
+    transform: translateX(-100%) !important;
+}
+
+@media (min-width: 768px) {
+    .offcanvas.offcanvas-start:not(.show) {
+        transform: translateX(0) !important;
+    }
+}
+.offcanvas {
+    z-index: 1040;
+}
+
+.navbar {
+    z-index: 1050;
+}

@@ -1,9 +1,157 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
-<h2>Login</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Entrar</button>
-</form>
+<div class="container-fluid">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-8 col-lg-6 col-xl-4">
+            <!-- Card de Login -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">
+                        <i class="fas fa-unlock-alt me-2"></i>Acesso ao Sistema
+                    </h3>
+                </div>
+                
+                <div class="card-body p-4">
+                    <!-- Mensagens -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Usuário ou senha incorretos. Por favor tente novamente.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Campo Usuário -->
+                        <div class="mb-4">
+                            <label for="id_username" class="form-label">
+                                <i class="fas fa-user-circle me-2"></i>Nome de Usuário
+                            </label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       name="username" 
+                                       id="id_username"
+                                       class="form-control form-control-lg"
+                                       placeholder="Digite seu usuário"
+                                       required
+                                       autofocus>
+                                <span class="input-group-text">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                            </div>
+                            <div class="invalid-feedback">
+                                Por favor insira seu nome de usuário.
+                            </div>
+                        </div>
+
+                        <!-- Campo Senha -->
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label">
+                                <i class="fas fa-key me-2"></i>Senha
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       name="password" 
+                                       id="id_password"
+                                       class="form-control form-control-lg"
+                                       placeholder="Digite sua senha"
+                                       required>
+                                <span class="input-group-text toggle-password">
+                                    <i class="fas fa-eye"></i>
+                                </span>
+                            </div>
+                            <div class="invalid-feedback">
+                                Por favor insira sua senha.
+                            </div>
+                        </div>
+
+                        <!-- Links Úteis -->
+                        <div class="d-flex justify-content-between mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="lembrar">
+                                <label class="form-check-label" for="lembrar">
+                                    Lembrar-me
+                                </label>
+                            </div>
+                            <a href="{% url 'password_reset' %}" class="text-decoration-none">
+                                <i class="fas fa-question-circle me-1"></i>Esqueceu a senha?
+                            </a>
+                        </div>
+
+                        <!-- Botão de Login -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                        </button>
+
+                        <!-- Cadastro -->
+                        <div class="text-center pt-3 border-top">
+                            <p class="mb-0">Não tem uma conta?
+                                <a href="{% url 'sign_up' %}" class="text-decoration-none">
+                                    <i class="fas fa-user-plus me-1"></i>Cadastre-se
+                                </a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Botão Voltar -->
+            <div class="text-center mt-4">
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar para Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos Customizados -->
+<style>
+.min-vh-100 { min-height: 100vh; }
+.card { border-radius: 15px; }
+.card-header { border-radius: 15px 15px 0 0 !important; }
+.toggle-password { cursor: pointer; transition: all 0.3s; }
+.toggle-password:hover { background-color: #f8f9fa; }
+</style>
+
+<!-- Script para Mostrar/Esconder Senha -->
+<script>
+document.querySelector('.toggle-password').addEventListener('click', function(e) {
+    const passwordInput = document.getElementById('id_password');
+    const icon = this.querySelector('i');
+    
+    if(passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+});
+</script>
+
+<!-- Validação Bootstrap -->
+<script>
+(function () {
+  'use strict'
+
+  const forms = document.querySelectorAll('.needs-validation')
+
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+</script>
+
 {% endblock %}

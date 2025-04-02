@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        {% include 'partials/sidebar_fornecedor.html' %}
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <!-- Header -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Dashboard do Fornecedor</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group me-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary">Exportar Relatório</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métricas Rápidas -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4 mb-4">
+                <div class="col">
+                    <div class="card shadow-sm border-primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-subtitle mb-2 text-muted">Produtos Ativos</h6>
+                                    <h3 class="card-title">{{ total_produtos }}</h3>
+                                </div>
+                                <i class="fas fa-boxes fa-2x text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="card shadow-sm border-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-subtitle mb-2 text-muted">Pedidos Pendentes</h6>
+                                    <h3 class="card-title">{{ pedidos_pendentes }}</h3>
+                                </div>
+                                <i class="fas fa-clock fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="card shadow-sm border-success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-subtitle mb-2 text-muted">Pedidos Concluídos</h6>
+                                    <h3 class="card-title">{{ pedidos_concluidos }}</h3>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="card shadow-sm border-info">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-subtitle mb-2 text-muted">Receita Total</h6>
+                                    <h3 class="card-title">ECV {{ receita_total|floatformat:2 }}</h3>
+                                </div>
+                                <i class="fas fa-chart-line fa-2x text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos e Tabelas -->
+            <div class="row g-4">
+                <!-- Gráficos -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-transparent">
+                            <h6 class="mb-0"><i class="fas fa-chart-area me-2"></i>Desempenho Mensal</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="vendasChart" style="height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status dos Pedidos -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-transparent">
+                            <h6 class="mb-0"><i class="fas fa-tasks me-2"></i>Distribuição de Status</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="statusChart" style="height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabelas -->
+            <div class="row g-4 mt-2">
+                <!-- Pedidos Recentes -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-history me-2"></i>Últimos Pedidos</h6>
+                            <a href="{% url 'listar_pedidos' %}" class="btn btn-sm btn-outline-primary">
+                                Ver Todos <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Comprador</th>
+                                            <th>Produto</th>
+                                            <th>Status</th>
+                                            <th>Valor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for pedido in ultimos_pedidos %}
+                                        <tr onclick="window.location='{% url 'detalhes_pedido' pedido.id %}'" style="cursor: pointer;">
+                                            <td>{{ pedido.comprador.usuario.username }}</td>
+                                            <td>{{ pedido.produto.nome }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if pedido.status == 'pendente' %}bg-warning text-dark
+                                                    {% elif pedido.status == 'aceito' %}bg-success
+                                                    {% else %}bg-danger{% endif %}">
+                                                    {{ pedido.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>R$ {{ pedido.valor_total }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estoque Baixo -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>Estoque Baixo</h6>
+                            <a href="{% url 'listar_produtos' %}" class="btn btn-sm btn-outline-danger">
+                                Gerenciar <i class="fas fa-boxes ms-2"></i>
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Estoque Atual</th>
+                                            <th>Última Venda</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for produto in estoque_baixo %}
+                                        <tr>
+                                            <td>{{ produto.nome }}</td>
+                                            <td>{{ produto.quantidade }}</td>
+                                            <td>{{ produto.ultima_venda|date:"d/m/Y"|default:"N/A" }}</td>
+                                            <td>
+                                                <a href="{% url 'editar_produto' produto.id %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4 text-muted">
+                                                Nenhum produto com estoque baixo
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Scripts dos Gráficos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico de Vendas
+    const vendasCtx = document.getElementById('vendasChart').getContext('2d');
+    new Chart(vendasCtx, {
+        type: 'line',
+        data: {
+            labels: {{ meses|safe }},
+            datasets: [{
+                label: 'Vendas Mensais (ECV)',
+                data: {{ vendas_mensais|safe }},
+                borderColor: '#0d6efd',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(13, 110, 253, 0.05)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' }
+            }
+        }
+    });
+
+    // Gráfico de Status
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ status_labels|safe }},
+            datasets: [{
+                data: {{ status_values|safe }},
+                backgroundColor: [
+                    '#ffc107', // Pendente
+                    '#198754', // Aceito
+                    '#dc3545'  // Recusado
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { enabled: true }
+            }
+        }
+    });
+</script>
+
+<style>
+    .card {
+        border-radius: 0.75rem;
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    [class^="border-"] {
+        border-width: 2px !important;
+    }
+</style>
+{% endblock %}

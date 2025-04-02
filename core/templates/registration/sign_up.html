@@ -1,44 +1,227 @@
-{% extends "base.html" %}  <!-- Opcional: herda de um template base -->
+{% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<h2>Registrar</h2>
-<form method="post">
-    {% csrf_token %}
-    <div>
-        {{ form.username.label_tag }}
-        {{ form.username }}
+<div class="container-fluid">
+    <div class="row justify-content-center min-vh-100 align-items-center">
+        <div class="col-md-10 col-lg-8 col-xl-6">
+            <!-- Card de Registro -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Criar Nova Conta
+                    </h3>
+                </div>
+
+                <div class="card-body p-5">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <!-- Coluna Esquerda -->
+                            <div class="col-md-6">
+                                <!-- Usuário -->
+                                <div class="form-group">
+                                    <label for="id_username" class="form-label">
+                                        <i class="fas fa-user-circle me-2"></i>Nome de Usuário
+                                    </label>
+                                    <input type="text" 
+                                           name="username" 
+                                           id="id_username"
+                                           class="form-control form-control-lg"
+                                           required
+                                           autofocus
+                                           placeholder="Ex: joaosilva">
+                                    <div class="invalid-feedback">
+                                        Escolha um nome de usuário único
+                                    </div>
+                                </div>
+
+                                <!-- E-mail -->
+                                <div class="form-group mt-4">
+                                    <label for="id_email" class="form-label">
+                                        <i class="fas fa-envelope me-2"></i>E-mail
+                                    </label>
+                                    <input type="email" 
+                                           name="email" 
+                                           id="id_email"
+                                           class="form-control form-control-lg"
+                                           required
+                                           placeholder="Ex: seuemail@dominio.com">
+                                    <div class="invalid-feedback">
+                                        Insira um e-mail válido
+                                    </div>
+                                </div>
+
+                                <!-- Tipo de Usuário -->
+                                <div class="form-group mt-4">
+                                    <label for="id_tipo" class="form-label">
+                                        <i class="fas fa-users me-2"></i>Tipo de Conta
+                                    </label>
+                                    <select name="tipo" 
+                                            id="id_tipo" 
+                                            class="form-select form-select-lg"
+                                            required>
+                                        <option value="">Selecione seu perfil...</option>
+                                        <option value="fornecedor">Fornecedor</option>
+                                        <option value="comprador">Comprador</option>
+                                        <option value="transportador">Transportador</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Coluna Direita -->
+                            <div class="col-md-6">
+                                <!-- Telefone -->
+                                <div class="form-group">
+                                    <label for="id_telefone" class="form-label">
+                                        <i class="fas fa-phone me-2"></i>Telefone
+                                    </label>
+                                    <input type="tel" 
+                                           name="telefone" 
+                                           id="id_telefone"
+                                           class="form-control form-control-lg"
+                                           pattern="\(?\d{2}\)?[\s-]?9?\d{4}[\s-]?\d{4}"
+                                           required
+                                           placeholder="Ex: (11) 91234-5678">
+                                    <div class="invalid-feedback">
+                                        Formato: (DD) 9XXXX-XXXX
+                                    </div>
+                                </div>
+
+                                <!-- Endereço -->
+                                <div class="form-group mt-4">
+                                    <label for="id_endereco" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Endereço
+                                    </label>
+                                    <textarea name="endereco" 
+                                              id="id_endereco"
+                                              class="form-control form-control-lg"
+                                              rows="3"
+                                              required
+                                              placeholder="Rua, Número, Bairro - Cidade/Estado"></textarea>
+                                </div>
+
+                                <!-- Senha -->
+                                <div class="form-group mt-4">
+                                    <label for="id_password1" class="form-label">
+                                        <i class="fas fa-lock me-2"></i>Senha
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="password" 
+                                               name="password1" 
+                                               id="id_password1"
+                                               class="form-control form-control-lg"
+                                               pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                                               required
+                                               placeholder="Mínimo 8 caracteres">
+                                        <span class="input-group-text toggle-password">
+                                            <i class="fas fa-eye"></i>
+                                        </span>
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Deve conter: maiúscula, minúscula, número e 8+ caracteres
+                                    </small>
+                                </div>
+
+                                <!-- Confirmação de Senha -->
+                                <div class="form-group mt-4">
+                                    <label for="id_password2" class="form-label">
+                                        <i class="fas fa-lock me-2"></i>Confirme a Senha
+                                    </label>
+                                    <input type="password" 
+                                           name="password2" 
+                                           id="id_password2"
+                                           class="form-control form-control-lg"
+                                           required
+                                           placeholder="Repita a senha">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Termos e Condições -->
+                        <div class="form-check mt-4">
+                            <input class="form-check-input" type="checkbox" id="termos" required>
+                            <label class="form-check-label" for="termos">
+                                Concordo com os <a href="#" class="text-decoration-none">Termos de Uso</a> e 
+                                <a href="#" class="text-decoration-none">Política de Privacidade</a>
+                            </label>
+                        </div>
+
+                        <!-- Botão de Registro -->
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-user-check me-2"></i>Criar Conta
+                            </button>
+                        </div>
+
+                        <!-- Login Existente -->
+                        <div class="text-center mt-4 pt-3 border-top">
+                            <p class="mb-0">Já tem uma conta?
+                                <a href="{% url 'login' %}" class="text-decoration-none">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Faça Login
+                                </a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
+
+<!-- Estilos Customizados -->
+<style>
+.min-vh-100 { min-height: 100vh; }
+.card { border-radius: 20px; }
+.card-header { border-radius: 20px 20px 0 0 !important; }
+.toggle-password { cursor: pointer; transition: all 0.3s; }
+.toggle-password:hover { background-color: #f8f9fa; }
+.form-text { font-size: 0.85rem; }
+</style>
+
+<!-- Scripts -->
+<script>
+// Toggle Password Visibility
+document.querySelectorAll('.toggle-password').forEach(element => {
+    element.addEventListener('click', function(e) {
+        const passwordInput = this.closest('.input-group').querySelector('input');
+        const icon = this.querySelector('i');
+        
+        passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+    });
+});
+
+// Validação de Força da Senha
+document.getElementById('id_password1').addEventListener('input', function() {
+    const strengthBadge = document.createElement('small');
+    const regex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
     
-    <div>
-        {{ form.email.label_tag }}
-        {{ form.email }}
-    </div>
-    
-    <div>
-        {{ form.tipo.label_tag }}
-        {{ form.tipo }}
-    </div>
-    
-    <div>
-        {{ form.telefone.label_tag }}
-        {{ form.telefone }}
-    </div>
-    
-    <div>
-        {{ form.endereco.label_tag }}
-        {{ form.endereco }}
-    </div>
-    
-    <div>
-        {{ form.password1.label_tag }}
-        {{ form.password1 }}
-    </div>
-    
-    <div>
-        {{ form.password2.label_tag }}
-        {{ form.password2 }}
-    </div>
-    
-    <button type="submit">Registrar</button>
-</form>
+    if(this.value.match(regex)) {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+    } else {
+        this.classList.add('is-invalid');
+        this.classList.remove('is-valid');
+    }
+});
+
+// Validação Bootstrap
+(function () {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})()
+</script>
+
 {% endblock %}

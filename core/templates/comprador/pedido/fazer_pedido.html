@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+            {% include 'partials/sidebar_comprador.html' %}
+        
+        <!-- Conteúdo Principal -->
+        <main class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Pedido: {{ produto.nome }}</h4>
+                    <small class="opacity-75">Fornecedor: {{ produto.fornecedor.usuario.username }}</small>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-cube me-2"></i>
+                                Quantidade Disponível: 
+                                <span class="text-success">{{ produto.quantidade }}</span>
+                            </label>
+                            {{ form.quantidade }}
+                            <div class="invalid-feedback">
+                                Por favor insira uma quantidade válida
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Confirmar Pedido
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+    /* Layout Fixo */
+    .container-fluid {
+        overflow-x: hidden;
+    }
+    
+    /* Sidebar Fixa */
+    .col-auto {
+        width: 280px;
+        position: fixed;
+        left: 0;
+        height: 100vh;
+        z-index: 1000;
+    }
+    
+    /* Conteúdo Principal */
+    main {
+        min-height: 100vh;
+        padding-top: 1rem;
+        transition: margin 0.3s;
+    }
+    
+    /* Responsividade */
+    @media (max-width: 991.98px) {
+        .col-auto {
+            position: static;
+            width: 100%;
+            height: auto;
+        }
+        
+        main {
+            margin-left: 0 !important;
+            width: 100% !important;
+            padding: 1rem;
+        }
+    }
+</style>
+
+<!-- Validação Bootstrap -->
+<script>
+(function () {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+{% endblock %}

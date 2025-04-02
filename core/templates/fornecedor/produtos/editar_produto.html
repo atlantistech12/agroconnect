@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        {% if request.user.perfil.tipo == 'comprador' %}
+            {% include 'partials/sidebar_comprador.html' %}
+        {% elif request.user.perfil.tipo == 'fornecedor' %}
+            {% include 'partials/sidebar_fornecedor.html' %}
+        {% endif %}
+
+        <!-- Conteúdo Principal -->
+        <div class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Editar Produto</h1>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="nome" class="form-label">Nome do Produto</label>
+                                <input type="text" class="form-control" id="nome" name="nome" 
+                                       value="{{ produto.nome }}" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="categoria" class="form-label">Categoria</label>
+                                <select class="form-select" id="categoria" name="categoria" required>
+                                    {% for categoria in categorias %}
+                                        <option value="{{ categoria.id }}" 
+                                            {% if produto.categoria.id == categoria.id %}selected{% endif %}>
+                                            {{ categoria.nome }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="descricao" class="form-label">Descrição</label>
+                                <textarea class="form-control" id="descricao" name="descricao" 
+                                          rows="3" required>{{ produto.descricao }}</textarea>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="preco" class="form-label">Preço (R$)</label>
+                                <input type="number" class="form-control" id="preco" name="preco" 
+                                       step="0.01" value="{{ produto.preco }}" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="quantidade" class="form-label">Quantidade em Estoque</label>
+                                <input type="number" class="form-control" id="quantidade" name="quantidade" 
+                                       value="{{ produto.quantidade }}" required>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="imagem" class="form-label">Imagem do Produto</label>
+                                <input class="form-control" type="file" id="imagem" name="imagem">
+                                {% if produto.imagem %}
+                                    <small class="text-muted">Imagem atual: {{ produto.imagem.name }}</small>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                                </button>
+                                <a href="{% url 'listar_produtos' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 0.5rem;
+    }
+    
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .border-bottom {
+        border-bottom: 2px solid #dee2e6 !important;
+    }
+</style>
+{% endblock %}

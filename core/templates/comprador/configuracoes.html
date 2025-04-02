@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        {% include 'partials/sidebar_comprador.html' %}
+        
+        <!-- Conteúdo Principal -->
+        <main class="col-lg-10 ms-auto px-4">
+            <!-- Cabeçalho -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">
+                    <i class="fas fa-user-cog me-2"></i>Configurações do Perfil
+                </h1>
+            </div>
+
+
+            <!-- Card Principal -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-id-card me-2"></i>Informações Pessoais
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <!-- Coluna Esquerda -->
+                            <div class="col-md-6">
+                                <!-- Tipo de Usuário -->
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-user-tag me-2"></i>Tipo de Usuário
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control bg-light" 
+                                           value="{{ request.user.perfil.get_tipo_display }}" 
+                                           disabled>
+                                </div>
+
+                                <!-- Telefone -->
+                                <div class="mb-3">
+                                    <label for="id_telefone" class="form-label">
+                                        <i class="fas fa-mobile-alt me-2"></i>Telefone
+                                    </label>
+                                    {{ form.telefone }}
+                                    <div class="invalid-feedback">
+                                        Por favor insira um telefone válido
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Coluna Direita -->
+                            <div class="col-md-6">
+                                <!-- Endereço -->
+                                <div class="mb-3">
+                                    <label for="id_endereco" class="form-label">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Endereço
+                                    </label>
+                                    {{ form.endereco }}
+                                    <div class="invalid-feedback">
+                                        Por favor insira um endereço válido
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seção de Segurança -->
+                        <div class="card mt-4 border-warning">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-shield-alt me-2"></i>Segurança da Conta
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Para alterar sua senha, 
+                                    <a href="{% url 'password_change' %}" class="alert-link">
+                                        clique aqui
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+</div>
+
+<!-- Estilos Customizados -->
+
+
+<!-- Validação Bootstrap -->
+<script>
+(function () {
+  'use strict'
+
+  // Fetch all forms to apply custom Bootstrap validation styles to
+  var forms = document.querySelectorAll('.needs-validation')
+
+  // Loop over them and prevent submission
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
+{% endblock %}

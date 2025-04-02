@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        {% include 'partials/sidebar_comprador.html' %}
+        <main class="col-lg-10 ms-auto px-4">
+            
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Dashboard do Comprador</h1>
+            </div>
+
+            <!-- Duas Colunas -->
+            <div class="row row-cols-1 row-cols-lg-2 g-4">
+                <!-- Coluna Produtos Disponíveis -->
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-shopping-basket me-2"></i>
+                                Produtos Disponíveis
+                                <a href="{% url 'listar_produtos' %}" class="float-end text-white fs-6">
+                                    Ver Todos <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row row-cols-1 row-cols-md-2 g-3">
+                                {% for produto in produtos_disponiveis|slice:":4" %}
+                                <div class="col">
+                                    <div class="card h-100 product-card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">{{ produto.nome }}</h6>
+                                            <p class="card-text text-muted small">
+                                                {{ produto.descricao|truncatechars:60 }}
+                                            </p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-primary">
+                                                    ECV {{ produto.preco }}
+                                                </span>
+                                                <span class="badge bg-success">
+                                                    Estoque: {{ produto.quantidade }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <a href="{% url 'fazer_pedido' produto.id %}" 
+                                               class="btn btn-sm btn-primary w-100">
+                                               <i class="fas fa-cart-plus me-2"></i>Comprar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna Meus Pedidos -->
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-clipboard-list me-2"></i>
+                                Meus Pedidos Recentes
+                                <a href="{% url 'meus_pedidos' %}" class="float-end text-dark fs-6">
+                                    Ver Todos <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Produto</th>
+                                            <th>Status</th>
+                                            <th>Valor</th>
+                                            <th>Data</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for pedido in meus_pedidos|slice:":5" %}
+                                        <tr class="clickable-row" 
+                                            onclick="window.location='{% url 'detalhes_pedido' pedido.id %}'">
+                                            <td>{{ pedido.produto.nome }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if pedido.status == 'pendente' %}bg-warning text-dark
+                                                    {% elif pedido.status == 'aceito' %}bg-success
+                                                    {% elif pedido.status == 'recusado' %}bg-danger
+                                                    {% else %}bg-primary{% endif %}">
+                                                    {{ pedido.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>ECV {{ pedido.valor_total }}</td>
+                                            <td>{{ pedido.data_pedido|date:"d/m/Y" }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4">
+                                                Nenhum pedido encontrado
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<style>
+    .product-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .clickable-row {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    
+    .clickable-row:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+    }
+    /* Garante que o sidebar fique fixo */
+    .offcanvas-lg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        visibility: visible;
+        transform: none;
+    }
+    
+    /* Ajuste de responsividade */
+    @media (max-width: 991.98px) {
+        .offcanvas-lg {
+            transform: translateX(-100%);
+            visibility: hidden;
+        }
+        .offcanvas-lg.show {
+            transform: translateX(0);
+            visibility: visible;
+        }
+        main {
+            margin-left: 0 !important;
+        }
+    }
+</style>
+{% endblock %}
