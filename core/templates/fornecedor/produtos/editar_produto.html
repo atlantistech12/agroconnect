@@ -22,57 +22,130 @@
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="nome" class="form-label">Nome do Produto</label>
-                                <input type="text" class="form-control" id="nome" name="nome" 
-                                       value="{{ produto.nome }}" required>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label for="categoria" class="form-label">Categoria</label>
-                                <select class="form-select" id="categoria" name="categoria" required>
-                                    {% for categoria in categorias %}
-                                        <option value="{{ categoria.id }}" 
-                                            {% if produto.categoria.id == categoria.id %}selected{% endif %}>
-                                            {{ categoria.nome }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div class="col-md-12">
-                                <label for="descricao" class="form-label">Descrição</label>
-                                <textarea class="form-control" id="descricao" name="descricao" 
-                                          rows="3" required>{{ produto.descricao }}</textarea>
-                            </div>
-
+                            <!-- Seção de Imagem com Preview -->
                             <div class="col-md-4">
-                                <label for="preco" class="form-label">Preço (R$)</label>
-                                <input type="number" class="form-control" id="preco" name="preco" 
-                                       step="0.01" value="{{ produto.preco }}" required>
+                                <div class="image-upload-container border rounded p-3 mb-3">
+                                    <label for="imagem" class="form-label d-block text-center">
+                                        <div class="position-relative">
+                                            {% if produto.imagem %}
+                                                <img src="{{ produto.imagem.url }}" 
+                                                     class="img-thumbnail mb-2 preview-image" 
+                                                     alt="Imagem atual do produto">
+                                            {% else %}
+                                                <div class="placeholder-image img-thumbnail mb-2">
+                                                    <i class="fas fa-image fa-3x text-secondary"></i>
+                                                    <span class="d-block small text-muted mt-2">Nenhuma imagem disponível</span>
+                                                </div>
+                                            {% endif %}
+                                            <div class="overlay">
+                                                <i class="fas fa-camera text-white"></i>
+                                            </div>
+                                        </div>
+                                        Alterar Imagem
+                                    </label>
+                                    <input class="form-control d-none" 
+                                           type="file" 
+                                           id="imagem" 
+                                           name="imagem"
+                                           onchange="previewImage(event)">
+                                    {% if produto.imagem %}
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   id="remove_imagem" 
+                                                   name="remove_imagem">
+                                            <label class="form-check-label text-danger small" 
+                                                   for="remove_imagem">
+                                                Remover imagem atual
+                                            </label>
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
 
-                            <div class="col-md-4">
-                                <label for="quantidade" class="form-label">Quantidade em Estoque</label>
-                                <input type="number" class="form-control" id="quantidade" name="quantidade" 
-                                       value="{{ produto.quantidade }}" required>
-                            </div>
+                            <!-- Demais Campos do Formulário -->
+                            <div class="col-md-8">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label for="nome" class="form-label">Nome do Produto</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="nome" 
+                                               name="nome" 
+                                               value="{{ produto.nome }}" 
+                                               required>
+                                    </div>
 
-                            <div class="col-md-4">
-                                <label for="imagem" class="form-label">Imagem do Produto</label>
-                                <input class="form-control" type="file" id="imagem" name="imagem">
-                                {% if produto.imagem %}
-                                    <small class="text-muted">Imagem atual: {{ produto.imagem.name }}</small>
-                                {% endif %}
-                            </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="categoria" class="form-label">Categoria</label>
+                                            <select class="form-select {% if form.categoria.errors %}is-invalid{% endif %}" 
+                                                    id="categoria" 
+                                                    name="categoria"
+                                                    aria-describedby="categoriaHelp">
+                                                <option value="" disabled selected>Selecione uma categoria...</option>
+                                                {% for categoria in categorias %}
+        <option value="{{ categoria.id }}" 
+            {% if produto.categoria.id == categoria.id %}selected{% endif %}>
+            {{ categoria.nome }} ({{ categoria.get_tipo_medida_display }})
+        </option>
+    {% endfor %}
+                                            </select>
+                                            
+                                            
+                                            <!-- Exibição de erros -->
+                                            {% if form.categoria.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.categoria.errors %}
+                                                        {{ error|escape }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
 
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-2"></i>Salvar Alterações
-                                </button>
-                                <a href="{% url 'listar_produtos' %}" class="btn btn-secondary">
-                                    <i class="fas fa-times me-2"></i>Cancelar
-                                </a>
+                                    <div class="col-md-6">
+                                        <label for="preco" class="form-label">Preço (ECV)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   id="preco" 
+                                                   name="preco" 
+                                                   step="0.01" 
+                                                   value="{{ produto.preco }}" 
+                                                   required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="quantidade" class="form-label">Quantidade em Estoque</label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="quantidade" 
+                                               name="quantidade" 
+                                               value="{{ produto.quantidade }}" 
+                                               required>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label for="descricao" class="form-label">Descrição</label>
+                                        <textarea class="form-control" 
+                                                  id="descricao" 
+                                                  name="descricao" 
+                                                  rows="4" 
+                                                  required>{{ produto.descricao }}</textarea>
+                                    </div>
+
+                                    <div class="col-12 mt-4">
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="fas fa-save me-2"></i>Salvar Alterações
+                                        </button>
+                                        <a href="{% url 'listar_produtos' %}" class="btn btn-outline-secondary px-4">
+                                            <i class="fas fa-times me-2"></i>Cancelar
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -83,23 +156,68 @@
 </div>
 
 <style>
-    .card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        border-radius: 0.5rem;
+    .image-upload-container {
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
-    
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+
+    .image-upload-container:hover {
+        background-color: #f8f9fa;
+        border-color: #0d6efd !important;
     }
-    
-    .form-label {
-        font-weight: 500;
-        color: #495057;
+
+    .preview-image {
+        max-width: 100%;
+        height: 200px;
+        object-fit: contain;
     }
-    
-    .border-bottom {
-        border-bottom: 2px solid #dee2e6 !important;
+
+    .placeholder-image {
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background-color: #f8f9fa;
+    }
+
+    .overlay {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background-color: rgba(0,0,0,0.5);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .image-upload-container:hover .overlay {
+        opacity: 1;
     }
 </style>
+
+<script>
+    function previewImage(event) {
+        const reader = new FileReader();
+        const preview = document.querySelector('.preview-image');
+        const placeholder = document.querySelector('.placeholder-image');
+        
+        reader.onload = function(){
+            if(preview) {
+                preview.src = reader.result;
+            } else if(placeholder) {
+                placeholder.innerHTML = `<img src="${reader.result}" class="img-thumbnail" style="height:200px;object-fit:contain;">`;
+            }
+        };
+        
+        if(event.target.files[0]) {
+            reader.readAsDataURL(event.target.files[0]);
+        }
+    }
+</script>
 {% endblock %}

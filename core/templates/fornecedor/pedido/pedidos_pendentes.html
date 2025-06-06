@@ -29,7 +29,7 @@
                             <td>{{ pedido.produto.nome }}</td>
                             <td>{{ pedido.comprador.usuario.username }}</td>
                             <td>{{ pedido.quantidade }}</td>
-                            <td>R$ {{ pedido.valor_total }}</td>
+                            <td>ECV {{ pedido.valor_total }}</td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{% url 'aceitar_pedido' pedido.id %}" 

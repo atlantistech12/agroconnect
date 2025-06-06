@@ -70,6 +70,19 @@
 
                             <!-- Coluna Direita -->
                             <div class="col-md-6">
+                                <!-- Campo de Upload de Imagem (Novo) -->
+                                <div class="form-group mb-3">
+                                    <label for="imagem" class="form-label">
+                                        <i class="fas fa-image me-2"></i>Foto do Produto
+                                    </label>
+                                    <input type="file" class="form-control" 
+                                           id="imagem" name="imagem"
+                                           accept="image/*">
+                                    <small class="form-text text-muted">
+                                        Formatos aceitos: JPG, PNG, JPEG (Máx. 5MB)
+                                    </small>
+                                </div>
+
                                 <!-- Quantidade -->
                                 <div class="form-group mb-3">
                                     <label for="quantidade" class="form-label">
@@ -135,16 +148,34 @@
 (function () {
   'use strict'
 
-  // Fetch all the forms we want to apply custom Bootstrap validation styles to
   var forms = document.querySelectorAll('.needs-validation')
 
-  // Loop over them and prevent submission
   Array.prototype.slice.call(forms)
     .forEach(function (form) {
       form.addEventListener('submit', function (event) {
         if (!form.checkValidity()) {
           event.preventDefault()
           event.stopPropagation()
+        }
+
+        // Validação personalizada para a imagem
+        const imagemInput = document.getElementById('imagem')
+        if (imagemInput.files.length > 0) {
+          const file = imagemInput.files[0]
+          const validTypes = ['image/jpeg', 'image/png', 'image/jpg']
+          const maxSize = 5 * 1024 * 1024 // 5MB
+
+          if (!validTypes.includes(file.type)) {
+            alert('Formato de arquivo inválido! Use JPG, PNG ou JPEG.')
+            event.preventDefault()
+            event.stopPropagation()
+          }
+
+          if (file.size > maxSize) {
+            alert('Tamanho do arquivo excede 5MB!')
+            event.preventDefault()
+            event.stopPropagation()
+          }
         }
 
         form.classList.add('was-validated')

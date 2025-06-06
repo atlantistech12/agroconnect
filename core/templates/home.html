@@ -15,28 +15,20 @@
     <!-- Seção de Recursos -->
     <div class="container my-5">
         <h2 class="text-center mb-5">Como Funciona</h2>
-        <div class="row">
+        <div class="row justify-content-center">
             <div class="col-md-4 mb-4">
                 <div class="card feature-card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Fornecedores</h5>
-                        <p class="card-text">Cadastre seus produtos e conecte-se com compradores em todo o país.</p>
+                        <h5 class="card-title text-center">Fornecedores</h5>
+                        <p class="card-text text-center">Cadastre seus produtos e conecte-se com compradores em todo o país.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4 mb-4">
                 <div class="card feature-card h-100">
                     <div class="card-body">
-                        <h5 class="card-title">Transportadores</h5>
-                        <p class="card-text">Ofereça seus serviços de logística para toda a cadeia produtiva.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="card feature-card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Compradores</h5>
-                        <p class="card-text">Encontre os melhores produtos agrícolas diretamente dos produtores.</p>
+                        <h5 class="card-title text-center">Clientes</h5>
+                        <p class="card-text text-center">Encontre os melhores produtos agrícolas diretamente dos produtores.</p>
                     </div>
                 </div>
             </div>
@@ -50,4 +42,23 @@
             <a href="{% url 'sign_up' %}" class="btn btn-success btn-lg">Cadastre-se Gratuitamente</a>
         </div>
     </div>
+
+    <!-- Rodapé -->
+    <footer class="bg-dark text-white mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Sobre Nós</h5>
+                    <p>Conectando produtores, transportadores e compradores no agronegócio caboverdiano.</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Contato</h5>
+                    <p>Email: contato@agroconnect.com.cv<br>Telefone: (00) 1234-5678</p>
+                </div>
+            </div>
+            <div class="text-center pt-3">
+                <p>&copy; 2025 AgroConnect. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
 {% endblock %}

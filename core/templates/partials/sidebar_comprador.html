@@ -7,7 +7,7 @@
         <div class="px-3 mb-4">
             <h4 class="text-primary">
                 <i class="fas fa-warehouse"></i>
-                Comprador
+                Cliente
             </h4>
         </div>
 
@@ -34,38 +34,28 @@
                     Meus Pedidos
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'mensagens_fornecedor' %}active{% endif %}" 
-                   href="{% url 'mensagens' %}">
-                    <i class="fas fa-envelope mr-2"></i>
-                    Mensagens
-                    <span class="badge bg-primary rounded-pill float-end">3</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'configuracoes_fornecedor' %}active{% endif %}" 
-                   href="{% url 'configuracoes' %}">
-                    <i class="fas fa-cog mr-2"></i>
-                    Configurações
-                </a>
-            </li>
         </ul>
 
         <!-- Sidebar Footer -->
         <div class="position-absolute bottom-0 start-0 w-100 p-3 border-top">
-            <div class="d-flex align-items-center">
-                <div class="flex-shrink-0">
-                    <img src="{% static 'images/avatar.png' %}" 
-                         alt="Avatar" 
-                         class="rounded-circle"
-                         width="40"
-                         height="40">
+            <a href="{% url 'configuracoes' %}" class="text-decoration-none text-dark hover-primary">
+                <div class="d-flex align-items-center transition-all">
+                    <div class="flex-shrink-0">
+                        <img src="{% static 'images/avatar.png' %}" 
+                             alt="Avatar" 
+                             class="rounded-circle shadow-sm"
+                             width="40"
+                             height="40">
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <small class="text-muted d-block">Logado como</small>
+                        <div class="fw-semibold text-primary">
+                            {{ request.user.username }}
+                            <i class="fas fa-cog ms-2 small-icon"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex-grow-1 ms-2">
-                    <small class="text-muted">Logado como</small>
-                    <div class="fw-small">{{ request.user.username }}</div>
-                </div>
-            </div>
+            </a>
         </div>
     </div>
 </nav>
@@ -97,8 +87,32 @@
         font-weight: 500;
     }
 
+    .hover-primary:hover {
+        color: #0d6efd !important;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    .small-icon {
+        font-size: 0.8em;
+    }
+
     .badge {
         font-size: 0.7em;
         margin-top: 3px;
+    }
+
+    .sidebar-footer {
+        border-top: 1px solid #eee;
+    }
+
+    .rounded-circle {
+        transition: transform 0.3s ease;
+    }
+
+    .hover-primary:hover .rounded-circle {
+        transform: scale(1.1);
     }
 </style>

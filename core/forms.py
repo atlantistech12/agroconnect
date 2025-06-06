@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Perfil, Produto, Mensagem, Avaliacao, Pedido
+from .models import Perfil, Produto, Avaliacao, Pedido, Categoria
 from django.core.exceptions import ValidationError
 
 class SignUpForm(UserCreationForm):
@@ -22,7 +22,18 @@ class SignUpForm(UserCreationForm):
 class ProdutoForm(forms.ModelForm):
     class Meta:
         model = Produto
-        fields = ['nome', 'descricao', 'preco', 'quantidade']
+        fields = ['nome', 'descricao', 'preco', 'quantidade', 'categoria', 'imagem']
+
+        def clean_imagem(self):
+            imagem = self.cleaned_data.get('imagem')
+            if imagem:
+                # Limitar tamanho (exemplo: 5MB)
+                if imagem.size > 5 * 1024 * 1024:
+                    raise forms.ValidationError("A imagem não pode ter mais de 5MB.")
+                # Verificar tipo de arquivo
+                if not imagem.name.lower().endswith(('.jpg', '.jpeg', '.png')):
+                    raise forms.ValidationError("Formatos suportados: JPG, JPEG, PNG.")
+            return imagem
 
 class PerfilForm(forms.ModelForm):
     class Meta:
@@ -30,17 +41,6 @@ class PerfilForm(forms.ModelForm):
         fields = ['telefone', 'endereco', 'tipo']
         widgets = {
             'endereco': forms.Textarea(attrs={'rows': 4}),
-        }
-
-class MensagemForm(forms.ModelForm):
-    class Meta:
-        model = Mensagem
-        fields = ['conteudo']
-        widgets = {
-            'conteudo': forms.Textarea(attrs={
-                'rows': 3,
-                'placeholder': 'Escreva sua mensagem aqui...'
-            })
         }
 
 
@@ -82,3 +82,11 @@ class PedidoForm(forms.ModelForm):
                 f"Estoque insuficiente. Disponível: {self.produto.quantidade}"
             )
         return quantidade
+    
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ['nome', 'tipo_medida', 'descricao', 'icone']
+        widgets = {
+            'descricao': forms.Textarea(attrs={'rows': 3}),
+        }

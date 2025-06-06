@@ -5,11 +5,11 @@
 
 <div class="container-fluid">
     <div class="row">
-        {% include 'partials/sidebar_comprador.html' %}
+            {% include 'partials/sidebar_comprador.html' %}
         <main class="col-lg-10 ms-auto px-4">
             
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Dashboard do Comprador</h1>
+                <h1 class="h2">Dashboard do Cliente</h1>
             </div>
 
             <!-- Duas Colunas -->
@@ -48,7 +48,7 @@
                                         <div class="card-footer bg-transparent">
                                             <a href="{% url 'fazer_pedido' produto.id %}" 
                                                class="btn btn-sm btn-primary w-100">
-                                               <i class="fas fa-cart-plus me-2"></i>Comprar
+                                               <i class="fas fa-cart-plus me-2"></i>Encomendar
                                             </a>
                                         </div>
                                     </div>
@@ -66,7 +66,7 @@
                             <h5 class="card-title mb-0">
                                 <i class="fas fa-clipboard-list me-2"></i>
                                 Meus Pedidos Recentes
-                                <a href="{% url 'meus_pedidos' %}" class="float-end text-dark fs-6">
+                                <a href="{% url 'listar_pedidos' %}" class="float-end text-dark fs-6">
                                     Ver Todos <i class="fas fa-arrow-right"></i>
                                 </a>
                             </h5>

@@ -1,78 +1,204 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load pedido_tags %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-        {% include 'partials/sidebar_fornecedor.html' %}
-        
-        <main class="col-md-9 ml-sm-auto col-lg-10 px-4">
-            <h2 class="my-4">Pedidos Recebidos</h2>
-            
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Produto</th>
-                            <th>Comprador</th>
-                            <th>Quantidade</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if pedidos %}
-                            {% for pedido in pedidos %}
-                        <tr>
-                            <td>{{ pedido.produto.nome }}</td>
-                            <td>{{ pedido.comprador.usuario.username }}</td>
-                            <td>{{ pedido.quantidade }}</td>
-                            <td>
-                                {% if pedido.status == 'pendente' %}
-                                    <span class="badge bg-warning text-dark">{{ pedido.status }}</span>
-                                {% elif pedido.status == 'aceito' %}
-                                    <span class="badge bg-success text-white">{{ pedido.status }}</span>
-                                {% elif pedido.status == 'recusado' %}
-                                    <span class="badge bg-danger text-white">{{ pedido.status }}</span>
-                                {% elif pedido.status == 'entregue' %}
-                                    <span class="badge bg-primary text-white">{{ pedido.status }}</span>
-                                {% else %}
-                                    <span class="badge bg-secondary text-white">{{ pedido.status }}</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ pedido.data_pedido|date:"d/m/Y H:i" }}</td> <!-- Exibe a data formatada -->
-                            <td>
-                                <a href="{% url 'detalhes_pedido' pedido.id %}" class="btn btn-sm btn-info">Detalhes</a>
-                                <a href="{% url 'aceitar_pedido' pedido.id %}" class="btn btn-sm btn-success">Aceitar</a>
-                                <a href="{% url 'recusar_pedido' pedido.id %}" class="btn btn-sm btn-danger">Recusar</a>
-                            </td>
-                        </tr>
-                                {% endfor %}
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center">Nenhum pedido recebido.</td>
-                        </tr>
-                    {% endif %}
-                    </tbody>
-                </table>
+        <!-- Sidebar -->
+        {% include 'partials/sidebar_'|add:request.user.perfil.tipo|add:'.html' %}
+
+        <!-- Conteúdo Principal -->
+        <div class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+                <h2>Gestão de Pedidos</h2>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <div class="btn-group mr-2">
+                        <a href="{% url 'listar_pedidos' %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-sync"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
-        </main>
-    </div>
-    <div class="pagination justify-content-center my-4">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-                <a href="?page=1" class="btn btn-sm btn-outline-primary">&laquo; Primeira</a>
-                <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm btn-outline-primary">Anterior</a>
+
+            <!-- Filtros de Status -->
+            <div class="row mb-4">
+                <div class="col">
+                    <div class="btn-group" role="group">
+                        <a href="?status=" class="btn btn-outline-secondary {% if not status_filter %}active{% endif %}">
+                            Todos ({{ page_obj.paginator.count }})
+                        </a>
+                        {% for status, label in status_choices %}
+                            <a href="?status={{ status }}" 
+                               class="btn btn-outline-{{ status|status_color }} {% if status_filter == status %}active{% endif %}">
+                                {{ label }} ({{ status_counts|get_item:status }})
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Pedidos -->
+            <div class="row">
+                {% for pedido in page_obj %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <a href="{% url 'detalhes_pedido' pedido.id %}" class="text-decoration-none">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-header bg-transparent">
+                                    <div class="d-flex justify-content-between">
+                                        <small class="text-muted">#{{ pedido.id }}</small>
+                                        <span class="badge bg-{{ pedido.status|status_color }}">
+                                            {{ pedido.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-body">
+                                    <h6 class="card-title mb-3">
+                                        <i class="fas fa-box-open me-2"></i>
+                                        {{ pedido.produto.nome }}
+                                    </h6>
+                                    
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Quantidade:</span>
+                                            <strong>{{ pedido.quantidade }}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Total:</span>
+                                            <strong>ECV {{ pedido.total }}</strong>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Data:</span>
+                                            <small class="text-muted">{{ pedido.data_pedido|date:"d/m/Y H:i" }}</small>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div class="card-footer bg-transparent">
+                                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                        {% if request.user.perfil.tipo == 'fornecedor' %}
+                                            {% if pedido.status == 'pendente' %}
+                                                <form method="post" action="{% url 'aceitar_pedido' pedido.id %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-success" aria-label="Aceitar pedido #{{ pedido.id }}">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="post" action="{% url 'recusar_pedido' pedido.id %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-danger" aria-label="Recusar pedido #{{ pedido.id }}">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+                                            {% elif pedido.status == 'aprovado' %}
+                                                <form method="post" action="{% url 'concluir_pedido' pedido.id %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-primary" aria-label="Concluir pedido #{{ pedido.id }}">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            <form method="get" action="{% url 'detalhes_pedido' pedido.id %}" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-primary" aria-label="Ver detalhes do pedido #{{ pedido.id }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <form method="get" action="{% url 'detalhes_pedido' pedido.id %}" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary" aria-label="Ver detalhes do pedido #{{ pedido.id }}">
+                                                    Detalhes
+                                                </button>
+                                            </form>
+                                            {% if pedido.status == 'pendente' %}
+                                                <form method="post" action="{% url 'cancelar_pedido' pedido.id %}" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-danger" aria-label="Cancelar pedido #{{ pedido.id }}">
+                                                        Cancelar
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle fa-2x mb-3"></i>
+                            <h5>Nenhum pedido encontrado</h5>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Paginação -->
+            {% if page_obj.paginator.num_pages > 1 %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1&status={{ status_filter }}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}&status={{ status_filter }}">{{ num }}</a>
+                            </li>
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&status={{ status_filter }}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
             {% endif %}
-    
-            <span class="current">
-                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}.
-            </span>
-    
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm btn-outline-primary">Próxima</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}" class="btn btn-sm btn-outline-primary">Última &raquo;</a>
-            {% endif %}
-        </span>
+        </div>
     </div>
 </div>
+
+<style>
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 0.5rem;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .badge {
+        font-size: 0.8em;
+        padding: 0.5em 0.75em;
+    }
+    
+    .btn-group .btn {
+        border-radius: 0.25rem !important;
+    }
+    
+    .status-badge {
+        width: 85px;
+        text-align: center;
+    }
+</style>
 {% endblock %}

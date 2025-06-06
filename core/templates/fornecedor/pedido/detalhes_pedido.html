@@ -1,41 +1,97 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load pedido_tags %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-        {% include 'partials/sidebar_fornecedor.html' %}
-        <main class="col-md-9 ml-sm-auto col-lg-10 px-4">
-            <div class="card-header bg-primary text-white">
-                <h3>Detalhes do Pedido #{{ pedido.id }}</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h5>Informações do Produto</h5>
-                        <ul class="list-group">
-                            <li class="list-group-item">
-                                <strong>Nome:</strong> {{ pedido.produto.nome }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Quantidade:</strong> {{ pedido.quantidade }}
-                            </li>
-                            <li class="list-group-item">
-                                <strong>Valor Total:</strong> ECV {{ pedido.valor_total }}
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Status do Pedido</h5>
-                        <div class="alert alert-{% if pedido.status == 'entregue' %}success{% else %}warning{% endif %}">
-                            {{ pedido.get_status_display }}
-                        </div>
-                        <a href="{% url 'listar_pedidos' %}" class="btn btn-secondary">
-                            Voltar para Meus Pedidos
-                        </a>
-                    </div>
+        <!-- Sidebar -->
+        {% include 'partials/sidebar_'|add:request.user.perfil.tipo|add:'.html' %}
+
+        <!-- Conteúdo Principal -->
+        <div class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+                <h2>Detalhes do Pedido #{{ pedido.id }}</h2>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{% url 'listar_pedidos' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
                 </div>
             </div>
-        </main>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <small class="text-muted">Criado em: {{ pedido.data_pedido|date:"d/m/Y H:i" }}</small>
+                        <span class="badge bg-{{ pedido.status|status_color }}">
+                            {{ pedido.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-box-open me-2"></i>
+                        {{ pedido.produto.nome }}
+                    </h5>
+                    
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Quantidade:</span>
+                            <strong>{{ pedido.quantidade }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Total:</span>
+                            <strong>ECV {{ pedido.total }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Comprador:</span>
+                            <strong>{{ pedido.comprador.nome|default:pedido.comprador.usuario }}</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Produto Fornecido por:</span>
+                            <strong>{{ pedido.produto.fornecedor.nome|default:pedido.produto.fornecedor.usuario }}</strong>
+                        </li>
+                    </ul>
+                </div>
+
+                {% if request.user.perfil.tipo == 'fornecedor' %}
+                    <div class="card-footer bg-transparent">
+                        {% if pedido.status == 'pendente' %}
+                            <form method="post" action="{% url 'aceitar_pedido' pedido.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success" aria-label="Aceitar pedido #{{ pedido.id }}">
+                                    <i class="fas fa-check"></i> Aceitar
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'recusar_pedido' pedido.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger" aria-label="Recusar pedido #{{ pedido.id }}">
+                                    <i class="fas fa-times"></i> Recusar
+                                </button>
+                            </form>
+                        {% elif pedido.status == 'aceito' %}
+                            <form method="post" action="{% url 'concluir_pedido' pedido.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary" aria-label="Concluir pedido #{{ pedido.id }}">
+                                    <i class="fas fa-check-circle"></i> Concluir Pedido
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .card {
+        border-radius: 0.5rem;
+    }
+    .badge {
+        font-size: 0.8em;
+        padding: 0.5em 0.75em;
+    }
+</style>
 {% endblock %}

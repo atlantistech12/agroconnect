@@ -2,15 +2,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404
 from django.contrib.auth import login
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg, Q, Sum, F
-from .models import Perfil, Produto, Pedido, Transporte, Mensagem, Avaliacao, Categoria
-from .forms import SignUpForm, ProdutoForm, PerfilForm, MensagemForm, AvaliacaoForm, PedidoForm
-from django.contrib import messages
+from .models import Perfil, Produto, Pedido, Avaliacao, Categoria
+from .forms import SignUpForm, ProdutoForm, PerfilForm, AvaliacaoForm, PedidoForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils import timezone
 from datetime import timedelta
-
+from django.urls import reverse_lazy
 
 
 def home(request):
@@ -45,7 +45,7 @@ def dashboard(request):
         # Métricas Básicas
         total_produtos = Produto.objects.filter(fornecedor=perfil).count()
         pedidos_pendentes = Pedido.objects.filter(produto__fornecedor=perfil, status='pendente').count()
-        pedidos_concluidos = Pedido.objects.filter(produto__fornecedor=perfil, status='entregue').count()
+        pedidos_concluidos = Pedido.objects.filter(produto__fornecedor=perfil, status='concluido').count()
         receita_total = Pedido.objects.filter(produto__fornecedor=perfil).aggregate(total=Sum('valor_total'))
         
         # Gráfico de Vendas Mensais
@@ -105,38 +105,36 @@ def dashboard(request):
             comprador=request.user.perfil,
             status='pendente'
         ).count()
-
-        # Mensagens nao lidas
-        mensagens_nao_lidas = Mensagem.objects.filter(
-            destinatario=request.user.perfil,
-            lida=False
-        ).count()
     
         context = {
             'produtos_disponiveis': produtos_disponiveis,
             'meus_pedidos': meus_pedidos,
             'pedidos_pendentes': pedidos_pendentes,
-            'mensagens_nao_lidas':mensagens_nao_lidas
         }
         return render(request, 'comprador/dashboard_comprador.html', context)
     
-    elif perfil.tipo == 'transportador':
-        transportes = Transporte.objects.filter(transportador=perfil)
-        return render(request, 'dashboard_transportador.html', {'transportes': transportes})
 
 #Produtos --------------------------------------------------------------------------------------------------------------
 @login_required
 def criar_produto(request):
     if request.method == 'POST':
-        nome = request.POST['nome']
-        descricao = request.POST['descricao']
-        preco = request.POST['preco']
-        quantidade = request.POST['quantidade']
-        produto = Produto(fornecedor=request.user.perfil, nome=nome, descricao=descricao, preco=preco, quantidade=quantidade)
-        produto.save()
-        return redirect('dashboard')
-    categorias = Categoria.objects.all()
-    return render(request, 'fornecedor/produtos/criar_produto.html', {'categorias': categorias})
+        form = ProdutoForm(request.POST, request.FILES)
+    
+        if form.is_valid():
+            produto = form.save(commit=False)
+            produto.fornecedor = request.user.perfil
+            produto.save()
+            form.save_m2m()
+            messages.success(request, 'Produto criado com sucesso!')
+            return redirect('listar_produtos')
+    else:
+        form = ProdutoForm()
+
+    categorias = Categoria.objects.all().order_by('nome')
+    return render(request, 'fornecedor/produtos/criar_produto.html', {
+        'form': form,
+        'categorias': categorias
+    })
 
 def detalhes_produto(request, produto_id):
     perfil = request.user.perfil
@@ -169,7 +167,8 @@ def listar_produtos(request):
         produtos = produtos.filter(categoria__id=categoria_id)
     
     # Obter categorias para o dropdown
-    categorias = Categoria.objects.all()
+    categorias = Categoria.objects.all().order_by('nome')
+
     
     context = {
         'produtos': produtos.order_by('-data_criacao'),
@@ -187,18 +186,24 @@ def listar_produtos(request):
 @login_required
 def editar_produto(request, produto_id):
     produto = get_object_or_404(Produto, id=produto_id, fornecedor=request.user.perfil)
+    categorias = Categoria.objects.all()
     
     if request.method == 'POST':
-        # Atualiza os dados do produto
-        form = ProdutoForm(request.POST, instance=produto)
+        form = ProdutoForm(request.POST, request.FILES, instance=produto)
         if form.is_valid():
             form.save()
-        return redirect('dashboard')
-    
+            messages.success(request, 'Produto atualizado com sucesso!')
+            return redirect('listar_produtos')
+        else:
+            messages.error(request, 'Corrija os erros no formulário')
     else:
-        form  = ProdutoForm(instance=produto) 
+        form = ProdutoForm(instance=produto)
     
-    return render(request, 'fornecedor/produtos/editar_produto.html', {'produto': produto})
+    return render(request, 'fornecedor/produtos/editar_produto.html', {
+        'form': form,
+        'produto': produto,
+        'categorias': categorias
+    })
 
 @login_required
 def remover_produto(request, produto_id):
@@ -211,24 +216,49 @@ def remover_produto(request, produto_id):
 @login_required
 def listar_pedidos(request):
     perfil = request.user.perfil
-    # Filtra pedidos dos produtos do fornecedor logado
-    pedidos = Pedido.objects.filter(
-        produto__fornecedor=request.user.perfil
-    ).select_related('comprador', 'produto').order_by('-data_pedido')
+    status_filter = request.GET.get('status', None)
+    
+    # Filtragem baseada no tipo de usuário
+    if perfil.tipo == 'fornecedor':
+        pedidos = Pedido.objects.filter(produto__fornecedor=perfil)
+    elif perfil.tipo == 'comprador':
+        pedidos = Pedido.objects.filter(comprador=perfil)
+    else:
+        pedidos = Pedido.objects.none()
+
+    # Filtro adicional por status
+    if status_filter and status_filter in dict(Pedido.STATUS_CHOICES):
+        pedidos = pedidos.filter(status=status_filter)
+
+    # Ordenação e otimização
+    pedidos = pedidos.select_related('comprador', 'produto').order_by('-data_pedido')
 
     # Paginação
-    paginator = Paginator(pedidos, 10)  # 10 pedidos por página
+    paginator = Paginator(pedidos, 10)  # 10 itens por página
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    if perfil.tipo == 'fornecedor':
-        return render(request, 'fornecedor/pedido/listar_pedidos.html', {
-        'pedidos': pedidos
-    })
     
-    elif perfil.tipo == 'comprador':
-        return render(request, 'comprador/pedido/listar_pedidos.html', {
-        'pedidos': pedidos
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    # Contagem de status para sidebar
+    status_counts = {}
+    for status_key, _ in Pedido.STATUS_CHOICES:
+        status_counts[status_key] = Pedido.objects.filter(
+        produto__fornecedor=perfil, 
+        status=status_key
+        ).count()
+
+    template_path = f'{perfil.tipo}/pedido/listar_pedidos.html'
+    
+    return render(request, template_path, {
+        'page_obj': page_obj,
+        'status_filter': status_filter,
+        'status_counts': status_counts,
+        'status_choices': Pedido.STATUS_CHOICES,
     })
 
 @login_required
@@ -243,8 +273,8 @@ def aceitar_pedido(request, pedido_id):
         # Verificar estoque
         if pedido.produto.quantidade >= pedido.quantidade:
             # Atualizar estoque
-            pedido.produto.quantidade -= pedido.quantidade
-            pedido.produto.save()
+            Produto.objects.filter(id=pedido.produto.id).update(
+            quantidade=F('quantidade') - pedido.quantidade)
             
             # Atualizar status do pedido
             pedido.status = 'aceito'
@@ -256,19 +286,6 @@ def aceitar_pedido(request, pedido_id):
         messages.error(request, 'Este pedido já foi processado anteriormente.')
     
     return redirect('pedidos_pendentes')
-
-@login_required
-def recusar_pedido(request, pedido_id):
-    pedido = get_object_or_404(Pedido, id=pedido_id, produto__fornecedor=request.user.perfil)
-    
-    if pedido.status == 'pendente':
-        pedido.status = 'recusado'
-        pedido.save()
-        messages.success(request, 'Pedido recusado com sucesso!')
-    else:
-        messages.error(request, 'Este pedido já foi processado.')
-    
-    return redirect('listar_pedidos')
 
 @login_required
 def fazer_pedido(request, produto_id):
@@ -344,181 +361,40 @@ def recusar_pedido(request, pedido_id):
     return redirect('pedidos_pendentes')
 
 @login_required
-def meus_pedidos(request):
+def concluir_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
     perfil = request.user.perfil
-    
-    # Filtra os pedidos do comprador logado
-    pedidos = Pedido.objects.filter(
-        comprador=perfil
-    ).select_related('produto', 'produto__fornecedor').order_by('-data_pedido')
-    
-    # Filtro por status
-    status = request.GET.get('status')
-    if status in dict(Pedido.STATUS_CHOICES).keys():
-        pedidos = pedidos.filter(status=status)
-    
-    # Paginação (10 itens por página)
-    paginator = Paginator(pedidos, 10)
-    page_number = request.GET.get('page')
-    
-    try:
-        page_obj = paginator.page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-    
-    context = {
-        'page_obj': page_obj,
-        'selected_status': status,
-        'status_choices': Pedido.STATUS_CHOICES
-    }
-    
-    if perfil.tipo == 'fornecedor':
-        return render(request, 'fornecedor/pedido/meus_pedidos.html', context)
-    
-    elif perfil.tipo == 'comprador':
-        return render(request, 'comprador/pedido/meus_pedidos.html', context)
 
-# Conversa ----------------------------------------------------------------------------------------
+    if perfil.tipo != 'fornecedor' or pedido.produto.fornecedor != perfil:
+        messages.error(request, "Você não tem permissão para concluir este pedido.")
+        return redirect('listar_pedidos')
 
-@login_required
-def mensagens(request):
-    perfil_usuario = request.user.perfil
-    
-    # Obter todas as conversas
-    conversas = Mensagem.objects.filter(
-        Q(remetente=perfil_usuario) | Q(destinatario=perfil_usuario)
-    ).values('remetente', 'destinatario').distinct()
-    
-    threads = []
-    for conversa in conversas:
-        rem_id = conversa['remetente']
-        dest_id = conversa['destinatario']
-        
-        # Determinar o outro usuário da conversa
-        if rem_id == perfil_usuario.id:
-            outro_usuario_id = dest_id
-        else:
-            outro_usuario_id = rem_id
-            
-        try:
-            outro_usuario = Perfil.objects.get(id=outro_usuario_id)
-            ultima_msg = Mensagem.objects.filter(
-                Q(remetente=perfil_usuario, destinatario=outro_usuario) |
-                Q(remetente=outro_usuario, destinatario=perfil_usuario)
-            ).latest('data_envio')
-            
-            threads.append({
-                'user': outro_usuario,
-                'ultima_msg': ultima_msg,
-                'nao_lidas': Mensagem.objects.filter(
-                    destinatario=perfil_usuario,
-                    remetente=outro_usuario,
-                    lida=False
-                ).count()
-            })
-            
-        except (Perfil.DoesNotExist, Mensagem.DoesNotExist):
-            continue
-    
-    context = {
-        'threads': sorted(threads, key=lambda x: x['ultima_msg'].data_envio, reverse=True),
-        'todos_usuarios': Perfil.objects.exclude(id=perfil_usuario.id)
-    }
-
-    if perfil_usuario.tipo == 'fornecedor':
-        return render(request, 'fornecedor/conversas/mensagens.html', context)
-    
-    elif perfil_usuario.tipo == 'comprador':
-        return render(request, 'comprador/conversas/mensagens.html', context)
-
-@login_required
-def nova_mensagem(request):
-    if request.method == 'POST':
-        destinatario_id = request.POST.get('destinatario')
-        conteudo = request.POST.get('conteudo', '').strip()
-        
-        # Validação básica
-        if not conteudo:
-            messages.error(request, "O conteúdo da mensagem não pode estar vazio.")
-            return redirect('mensagens')
-            
-        try:
-            destinatario = Perfil.objects.get(id=destinatario_id)
-        except Perfil.DoesNotExist:
-            messages.error(request, "Destinatário inválido.")
-            return redirect('mensagens')
-            
-        if destinatario == request.user.perfil:
-            messages.error(request, "Você não pode enviar mensagens para si mesmo.")
-            return redirect('mensagens')
-            
-        # Criar a mensagem
-        Mensagem.objects.create(
-            remetente=request.user.perfil,
-            destinatario=destinatario,
-            conteudo=conteudo
-        )
-        
-        messages.success(request, "Mensagem enviada com sucesso!")
-        return redirect('detalhes_conversa', usuario_id=destinatario.id)
-    
-    return redirect('mensagens')
-
-@login_required
-def enviar_mensagem(request, fornecedor_id):
-    fornecedor = get_object_or_404(Perfil, id=fornecedor_id, tipo='fornecedor')
-    if request.method == 'POST':
-        form = MensagemForm(request.POST)
-        if form.is_valid():
-            mensagem = form.save(commit=False)
-            mensagem.remetente = request.user.perfil
-            mensagem.destinatario = fornecedor
-            mensagem.save()
-            return redirect('detalhes_conversa', fornecedor_id=fornecedor_id)
-        else:
-            form = MensagemForm()
-    return render(request, 'enviar_mensagem.html', {'form':form, 'fornecedor': fornecedor})
-
-@login_required
-def detalhes_conversa(request, usuario_id):
-    perfil_usuario = request.user.perfil
-    outro_usuario = get_object_or_404(Perfil, id=usuario_id)
-    
-    # Marcar mensagens como lidas
-    Mensagem.objects.filter(
-        destinatario=perfil_usuario,
-        remetente=outro_usuario,
-        lida=False
-    ).update(lida=True)
-    
-    if request.method == 'POST':
-        form = MensagemForm(request.POST)
-        if form.is_valid():
-            mensagem = form.save(commit=False)
-            mensagem.remetente = perfil_usuario
-            mensagem.destinatario = outro_usuario
-            mensagem.save()
-            return redirect('detalhes_conversa', usuario_id=usuario_id)
+    if request.method == 'POST' and pedido.status == 'aceito':
+        pedido.status = 'concluido'
+        pedido.save()
+        messages.success(request, f"Pedido #{pedido.id} concluído com sucesso.")
     else:
-        form = MensagemForm()
-    
-    mensagens = Mensagem.objects.filter(
-        Q(remetente=perfil_usuario, destinatario=outro_usuario) |
-        Q(remetente=outro_usuario, destinatario=perfil_usuario)
-    ).order_by('data_envio')
-    
-    context = {
-        'outro_usuario': outro_usuario,
-        'mensagens': mensagens,
-        'form': form
-    }
-    if perfil_usuario.tipo == 'fornecedor':
-        return render(request, 'fornecedor/conversas/detalhes_conversa.html', context)
-    
-    elif perfil_usuario.tipo == 'comprador':
-        return render(request, 'comprador/conversas/detalhes_conversa.html', context)
+        messages.error(request, "Este pedido não pode ser concluído.")
+
+    return redirect('detalhes_pedido', pedido_id=pedido.id)
+
+@login_required
+def cancelar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    perfil = request.user.perfil
+
+    if perfil.tipo != 'comprador' or pedido.comprador != perfil:
+        messages.error(request, "Você não tem permissão para cancelar este pedido.")
+        return redirect('listar_pedidos')
+
+    if request.method == 'POST' and pedido.status == 'pendente':
+        pedido.status = 'cancelado'
+        pedido.save()
+        messages.success(request, f"Pedido #{pedido.id} cancelado com sucesso.")
+    else:
+        messages.error(request, "Este pedido não pode ser cancelado.")
+
+    return redirect('listar_pedidos')
 
 # Outras Config -------------------------------------------------------------------------------------
 
@@ -529,7 +405,7 @@ def relatorios(request):
     
     # Métricas Principais
     total_produtos = Produto.objects.filter(fornecedor=perfil).count()
-    pedidos_concluidos = Pedido.objects.filter(produto__fornecedor=perfil, status='entregue').count()
+    pedidos_concluidos = Pedido.objects.filter(produto__fornecedor=perfil, status='concluido').count()
     receita_total = Pedido.objects.filter(produto__fornecedor=perfil).aggregate(
         total=Sum('valor_total')
     )['total'] or 0
@@ -565,7 +441,7 @@ def relatorios(request):
         'total_produtos': total_produtos,
         'pedidos_concluidos': pedidos_concluidos,
         'receita_total': receita_total,
-        'ticket_medio': receita_total / pedidos_concluidos if pedidos_concluidos else 0,
+        'ticket_medio': (receita_total / pedidos_concluidos) if pedidos_concluidos > 0 else 0,
         'meses': meses,
         'receita_mensal': receita_mensal,
         'pedidos_mensais': pedidos_mensais,
@@ -589,15 +465,15 @@ def profile_view(request):
 @login_required
 def perfil_fornecedor(request, fornecedor_id):
     fornecedor = get_object_or_404(Perfil, id=fornecedor_id, tipo='fornecedor')
-    avaliacoes = Avaliacao.objects.filter(fornecedor=fornecedor)
-    media_avaliacoes = fornecedor.avaliacoes_recebidas.aggregate(Avg('nota'))['nota__avg']
-    
     context = {
         'fornecedor': fornecedor,
-        'avaliacoes': avaliacoes,
-        'rating_medio': avaliacoes.aggregate(Avg('nota'))['nota__avg'] or 0
+        'produtos': Produto.objects.filter(fornecedor=fornecedor),
+        'avaliacoes': Avaliacao.objects.filter(fornecedor=fornecedor),
+        'total_produtos': Produto.objects.filter(fornecedor=fornecedor).count(),
+        'total_vendas': Pedido.objects.filter(produto__fornecedor=fornecedor, status='concluido').count(),
+        'media_avaliacoes': Avaliacao.objects.filter(fornecedor=fornecedor).aggregate(Avg('nota'))['nota__avg']
     }
-    return render(request, 'perfil_fornecedor.html', context)
+    return render(request, 'fornecedor/perfil.html', context)
 
 @login_required
 def configuracoes(request):
@@ -641,3 +517,7 @@ def avaliar_fornecedor(request, pedido_id):
         'form': form,
         'pedido': pedido
     })
+
+@login_required
+def relatorio_financeiro(request):
+    pass

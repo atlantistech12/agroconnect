@@ -2,26 +2,60 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils.text import slugify
 
 # Modelo para Fornecedores, Transportadores e Compradores
 class Perfil(models.Model):
     TIPO_USUARIO = (
         ('fornecedor', 'Fornecedor'),
-        ('transportador', 'Transportador'),
         ('comprador', 'Comprador'),
     )
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
     tipo = models.CharField(max_length=20, choices=TIPO_USUARIO)
     telefone = models.CharField(max_length=15)
     endereco = models.TextField()
+    imagem = models.ImageField(upload_to='perfis/', default='perfis/default.jpg')
 
     def __str__(self):
         return f"{self.usuario.username} - {self.tipo}"
 
 # Modelo para Produtos
 class Categoria(models.Model):
-    nome = models.CharField(max_length=100)
+    TIPOS_MEDIDA = [
+        ('kg', 'Quilograma (kg)'),
+        ('g', 'Grama (g)'),
+        ('L', 'Litro (L)'),
+        ('ml', 'Mililitro (ml)'),
+        ('un', 'Unidade (un)'),
+        ('cx', 'Caixa (cx)'),
+        ('sc', 'Saco (sc)'),
+        ('mt', 'Metro (m)'),
+    ]
+    
+    nome = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True, blank=True)  # Novo campo
+    tipo_medida = models.CharField(
+        max_length=3,
+        choices=TIPOS_MEDIDA,
+        default='un',
+        verbose_name="Unidade de Medida"
+    )
     descricao = models.TextField(blank=True)
+    sistema = models.BooleanField(default=False)
+    icone = models.CharField(max_length=50, default='fas fa-seedling', blank=True)
+
+    class Meta:
+        verbose_name = "Categoria"
+        verbose_name_plural = "Categorias"
+        
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.nome)
+        super().save(*args, **kwargs)
+    
+    @property
+    def unidade_medida(self):
+        return self.get_tipo_medida_display()
 
     def __str__(self):
         return self.nome
@@ -49,6 +83,13 @@ class Produto(models.Model):
     )
     data_criacao = models.DateTimeField(auto_now_add=True)
 
+    imagem = models.ImageField(
+        upload_to='produtos/',
+        blank=True,
+        null=True,
+        verbose_name="Foto do Produto"
+    )
+
     def __str__(self):
         return self.nome
 
@@ -58,8 +99,12 @@ class Pedido(models.Model):
         ('pendente', 'Pendente'),
         ('aceito', 'Aceito'),
         ('recusado', 'Recusado'),
-        ('entregue', 'Entregue'),
+        ('cancelado', 'Cancelado'), 
+        ('concluido', 'Concluido'),
     ]
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente')
+
     produto = models.ForeignKey(  # ← Deve ser ForeignKey
         'Produto',
         on_delete=models.CASCADE,
@@ -73,55 +118,10 @@ class Pedido(models.Model):
     quantidade = models.IntegerField()
     valor_total = models.DecimalField(max_digits=10, decimal_places=2)
     data_pedido = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente')
+    ultima_atualizacao = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Pedido #{self.id} - {self.produto.nome}"
-
-
-# Modelo para Transporte
-class Transporte(models.Model):
-    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
-    transportador = models.ForeignKey(Perfil, on_delete=models.CASCADE, limit_choices_to={'tipo': 'transportador'})
-    status = models.CharField(max_length=20, default='aguardando')
-    data_inicio = models.DateTimeField(null=True, blank=True)
-    data_entrega = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return f"Transporte para {self.pedido}"
-
-
-class Mensagem(models.Model):
-    remetente = models.ForeignKey(
-        'Perfil',
-        on_delete=models.CASCADE,
-        related_name='mensagens_enviadas'
-    )
-    destinatario = models.ForeignKey(
-        'Perfil',
-        on_delete=models.CASCADE,
-        related_name='mensagens_recebidas'
-    )
-    conteudo = models.TextField()
-    data_envio = models.DateTimeField(auto_now_add=True)
-    lida = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"De {self.remetente} para {self.destinatario} - {self.data_envio}"
-    class Meta:
-        ordering = ['-data_envio']
-        
-    def mark_as_read(self):
-        if not self.lida:
-            self.lida = True
-            self.save()
-    
-    @classmethod
-    def get_conversations(cls, user):
-        return cls.objects.filter(
-            Q(remetente=user) | Q(destinatario=user)
-        ).distinct('remetente', 'destinatario')
-    
 
 class Avaliacao(models.Model):
     class Meta:

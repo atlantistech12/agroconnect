@@ -2,16 +2,17 @@
 {% load static %}
 
 <nav class="col-md-2 d-none d-md-block bg-light sidebar position-sticky">
-    <div class="sidebar-sticky pt-3">
-        <!-- Brand/Logo -->
-        <div class="px-3 mb-4">
-            <h4 class="text-primary">
+    <div class="sidebar-sticky pt-2">
+        <!-- Cabeçalho -->
+        <div class="px-3">
+            <h4 class="text-primary mb-0">
                 <i class="fas fa-warehouse"></i>
                 Fornecedor
             </h4>
+            <hr class="mt-2 mb-2">
         </div>
 
-        <!-- Navigation Links -->
+        <!-- Menu de Navegação -->
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_fornecedor' %}active{% endif %}" 
@@ -20,6 +21,7 @@
                     Dashboard
                 </a>
             </li>
+            
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'listar_produtos' %}active{% endif %}" 
                    href="{% url 'listar_produtos' %}">
@@ -27,52 +29,87 @@
                     Produtos
                 </a>
             </li>
+            
             <li class="nav-item">
                 <a class="nav-link {% if request.resolver_match.url_name == 'criar_produto' %}active{% endif %}" 
                    href="{% url 'criar_produto' %}">
-                    <i class="fas fa-box-open mr-2"></i>
-                    Criar Produtos
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Criar Produto
                 </a>
             </li>
+            
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'listar_pedidos' %}active{% endif %}" 
-                   href="{% url 'listar_pedidos' %}">
+                <a class="nav-link dropdown-toggle {% if 'listar_pedidos' in request.resolver_match.url_name %}active{% endif %}" 
+                   href="#pedidosSubmenu" 
+                   data-bs-toggle="collapse" 
+                   role="button" 
+                   aria-expanded="false">
                     <i class="fas fa-clipboard-list mr-2"></i>
                     Meus Pedidos
+                    <i class="fas fa-chevron-right float-end submenu-arrow"></i>
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'mensagens_fornecedor' %}active{% endif %}" 
-                   href="{% url 'mensagens' %}">
-                    <i class="fas fa-envelope mr-2"></i>
-                    Mensagens
-                    <span class="badge bg-primary rounded-pill float-end">3</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'configuracoes_fornecedor' %}active{% endif %}" 
-                   href="{% url 'configuracoes' %}">
-                    <i class="fas fa-cog mr-2"></i>
-                    Configurações
-                </a>
+                <div class="collapse {% if 'listar_pedidos' in request.resolver_match.url_name %}show{% endif %}" id="pedidosSubmenu">
+                    <ul class="nav flex-column submenu">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.GET.status == ' ' %}active-sub{% endif %}" 
+                               href="{% url 'listar_pedidos' %}">
+                                Todos os pedidos
+                                <span class="badge bg-warning float-end">{{ pedidos_pendentes }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.GET.status == 'pendente' %}active-sub{% endif %}" 
+                               href="{% url 'listar_pedidos' %}?status=pendente">
+                                Pendentes
+                                <span class="badge bg-warning float-end">{{ pedidos_pendentes }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.GET.status == 'aceito' %}active-sub{% endif %}" 
+                               href="{% url 'listar_pedidos' %}?status=aceito">
+                                Aceitos
+                                <span class="badge bg-success float-end">{{ pedidos_aceitos }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.GET.status == 'concluido' %}active-sub{% endif %}" 
+                               href="{% url 'listar_pedidos' %}?status=concluido">
+                                Concluídos
+                                <span class="badge bg-primary float-end">{{ pedidos_concluidos }}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.GET.status == 'recusado' %}active-sub{% endif %}" 
+                               href="{% url 'listar_pedidos' %}?status=recusado">
+                                Recusados
+                                <span class="badge bg-danger float-end">{{ pedidos_recusados }}</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
         </ul>
 
-        <!-- Sidebar Footer -->
-        <div class="position-absolute bottom-0 start-0 w-100 p-3 border-top">
-            <div class="d-flex align-items-center">
-                <div class="flex-shrink-0">
-                    <img src="{% static 'images/avatar.png' %}" 
-                         alt="Avatar" 
-                         class="rounded-circle"
-                         width="40"
-                         height="40">
+        <!-- Rodapé do Usuário -->
+        <div class="mt-auto border-top">
+            <a href="{% url 'configuracoes' %}" class="text-decoration-none text-dark hover-primary p-3 d-block">
+                <div class="d-flex align-items-center transition-all">
+                    <div class="flex-shrink-0">
+                        <img src="{% static 'images/avatar.png' %}" 
+                             alt="Avatar" 
+                             class="rounded-circle shadow-sm"
+                             width="40"
+                             height="40">
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <small class="text-muted d-block">Logado como</small>
+                        <div class="fw-semibold text-primary">
+                            {{ request.user.username }}
+                            <i class="fas fa-cog ms-2 small-icon"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex-grow-1 ms-2">
-                    <small class="text-muted">Logado como</small>
-                    <div class="fw-small">{{ request.user.username }}</div>
-                </div>
-            </div>
+            </a>
         </div>
     </div>
 </nav>
@@ -86,7 +123,7 @@
 
     .nav-link {
         color: #333;
-        padding: 0.75rem 1.5rem;
+        padding: 0.5rem 1.25rem;
         transition: all 0.3s;
         border-left: 3px solid transparent;
     }
@@ -104,8 +141,81 @@
         font-weight: 500;
     }
 
+    .hover-primary:hover {
+        color: #0d6efd !important;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+
+    .small-icon {
+        font-size: 0.8em;
+    }
+
     .badge {
         font-size: 0.7em;
         margin-top: 3px;
+    }
+
+    .rounded-circle {
+        transition: transform 0.3s ease;
+    }
+
+    .hover-primary:hover .rounded-circle {
+        transform: scale(1.1);
+    }
+
+    .sidebar-sticky {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 120px);
+    }
+
+    hr {
+        margin: 0.75rem 0;
+        opacity: 0.15;
+    }
+
+    .nav-item:not(:last-child) {
+        margin-bottom: 2px;
+    }
+
+    /* Submenu */
+    .submenu {
+        padding-left: 1.5rem;
+        background-color: rgba(248, 249, 250, 0.5);
+    }
+
+    .submenu .nav-link {
+        padding: 0.4rem 1rem;
+        font-size: 0.9em;
+        border-left: 2px solid transparent;
+    }
+
+    .submenu .nav-link:hover {
+        background-color: rgba(13, 110, 253, 0.03);
+    }
+
+    .active-sub {
+        color: #0d6efd !important;
+        border-left-color: #0d6efd !important;
+        background-color: rgba(13, 110, 253, 0.08) !important;
+    }
+
+    .submenu-arrow {
+        transition: transform 0.3s ease;
+        font-size: 0.8em;
+        margin-top: 0.2em;
+    }
+
+    .dropdown-toggle[aria-expanded="true"] .submenu-arrow {
+        transform: rotate(90deg);
+    }
+
+    .badge.float-end {
+        margin-top: 0.1em;
+        font-size: 0.75em;
+        padding: 0.25em 0.5em;
     }
 </style>
