@@ -42,7 +42,7 @@
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span>Total:</span>
-                            <strong>ECV {{ pedido.total }}</strong>
+                            <strong>ECV {{ pedido.valor_total }}</strong>
                         </li>
                         <li class="list-group-item d-flex justify-content-between">
                             <span>Comprador:</span>
@@ -70,11 +70,23 @@
                                     <i class="fas fa-times"></i> Recusar
                                 </button>
                             </form>
+                            <form method="post" action="{% url 'cancelar_pedido' pedido.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-warning" aria-label="Cancelar pedido #{{ pedido.id }}">
+                                    <i class="fas fa-ban"></i> Cancelar
+                                </button>
+                            </form>
                         {% elif pedido.status == 'aceito' %}
                             <form method="post" action="{% url 'concluir_pedido' pedido.id %}" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-primary" aria-label="Concluir pedido #{{ pedido.id }}">
                                     <i class="fas fa-check-circle"></i> Concluir Pedido
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'cancelar_pedido' pedido.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-warning" aria-label="Cancelar pedido #{{ pedido.id }}">
+                                    <i class="fas fa-ban"></i> Cancelar
                                 </button>
                             </form>
                         {% endif %}

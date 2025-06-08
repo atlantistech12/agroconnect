@@ -5,7 +5,8 @@
     <!-- Cabeçalho do Perfil -->
     <div class="row">
         {% include 'partials/sidebar_comprador.html' %}
-        <div class="row mb-4">
+        <div class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <div class="row mb-4">
             <div class="col-md-8 d-flex align-items-center">
                 <div class="me-4">
                     <img src="{{ fornecedor.usuario.perfil.imagem.url }}" 
@@ -24,9 +25,9 @@
                 </div>
             </div>
             <div class="col-md-4 d-flex align-items-center justify-content-end">
-                <a href="{% url 'enviar_mensagem' fornecedor.id %}" 
+                <a href=" " 
                    class="btn btn-primary btn-lg">
-                    <i class="fas fa-envelope"></i> Enviar Mensagem
+                    <i class="fas fa-envelope"></i> Enviar Email
                 </a>
             </div>
         </div>
@@ -166,6 +167,9 @@
                 {% endif %}
             </div>
         </div>
+            
+        </div>
+        <!-- Conteúdo Principal -->
     </div>
     
 </div>
