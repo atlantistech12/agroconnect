@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.text import slugify
 
-# Modelo para Fornecedores, Transportadores e Compradores
+# Modelo para Fornecedores, Cliente
 class Perfil(models.Model):
     TIPO_USUARIO = (
         ('fornecedor', 'Fornecedor'),

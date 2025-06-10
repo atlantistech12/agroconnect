@@ -12,6 +12,11 @@
         <div class="col-md-9 ml-sm-auto col-lg-10 px-4">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
                 <h2>Pedido #{{ pedido.id }}</h2>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{% url 'listar_pedidos' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
             </div>
 
             <div class="card shadow-sm">
@@ -50,6 +55,32 @@
                         </li>
                     </ul>
                 </div>
+
+                {% if request.user.perfil.tipo == 'fornecedor' %}
+                    <div class="card-footer bg-transparent">
+                        {% if pedido.status == 'pendente' %}
+                            <form method="post" action="{% url 'cancelar_pedido' pedido.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-warning" aria-label="Cancelar pedido #{{ pedido.id }}">
+                                    <i class="fas fa-ban"></i> Cancelar
+                                </button>
+                            </form>
+                        {% elif pedido.status == 'aceito' %}
+                            <form method="post" action="{% url 'concluir_pedido' pedido.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary" aria-label="Concluir pedido #{{ pedido.id }}">
+                                    <i class="fas fa-check-circle"></i> Concluir Pedido
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'cancelar_pedido' pedido.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-warning" aria-label="Cancelar pedido #{{ pedido.id }}">
+                                    <i class="fas fa-ban"></i> Cancelar
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
