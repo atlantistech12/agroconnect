@@ -156,7 +156,11 @@ def listar_produtos(request):
     # Filtrar produtos disponíveis
     produtos = Produto.objects.filter(quantidade__gt=0)
     
-    # Aplicar filtros
+    # Se for fornecedor, mostrar apenas seus próprios produtos
+    if perfil.tipo == 'fornecedor':
+        produtos = produtos.filter(fornecedor=perfil)
+    
+    # Aplicar filtros de busca e categoria
     if search_query:
         produtos = produtos.filter(
             Q(nome__icontains=search_query) |
@@ -169,20 +173,37 @@ def listar_produtos(request):
     # Obter categorias para o dropdown
     categorias = Categoria.objects.all().order_by('nome')
 
+    # Prepare products with associated order for buyers
+    if perfil.tipo == 'comprador':
+        # Fetch orders for the current user that are pending or accepted
+        user_orders = Pedido.objects.filter(
+            comprador=perfil,
+            status__in=['pendente', 'aceito']
+        ).select_related('produto')
+        # Create a dictionary mapping product IDs to their orders
+        order_map = {order.produto.id: order for order in user_orders}
+        # Annotate each product with its associated order (if any)
+        for produto in produtos:
+            produto.pedido_comprador = order_map.get(produto.id)
+    
+    # Paginate results
+    paginator = Paginator(produtos.order_by('-data_criacao'), 12)  # 12 products per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
     context = {
-        'produtos': produtos.order_by('-data_criacao'),
+        'produtos': page_obj,  # Use paginated products
         'categorias': categorias,
         'search_query': search_query,
-        'categoria_selecionada': int(categoria_id) if categoria_id else None
+        'categoria_selecionada': int(categoria_id) if categoria_id else None,
+        'page_obj': page_obj  # For pagination controls in template
     }
 
     if perfil.tipo == 'fornecedor':
         return render(request, 'fornecedor/produtos/listar_produtos.html', context)
-    
     elif perfil.tipo == 'comprador':
         return render(request, 'comprador/produtos/listar_produtos.html', context)
-
+        
 @login_required
 def editar_produto(request, produto_id):
     produto = get_object_or_404(Produto, id=produto_id, fornecedor=request.user.perfil)
